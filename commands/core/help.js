@@ -8,7 +8,7 @@ module.exports = {
     execute(client, message, args) {
         let musicCommands = message.client.commands
         .filter(command => command.category == "music")
-        .map(command => '`' + command.name + '`').join(', ');
+        .map(command => '`' + command.name + '` ' + command.usage).join(', ');
 
         if (!musicCommands) musicCommands = 'none';
 
@@ -16,9 +16,9 @@ module.exports = {
             embeds: [{
                 color: 3447003,
                 author: { name: "help pannel" },
-                footer: { text: "<:poop:883767920428200037>" },
+                footer: { text: "" },
                 fields: [
-                    { name: "help", value: '`help`' },
+                    { name: "help", value: '`help` ' + this.usage + '\n' },
                     { name: "music", value: musicCommands }
                 ],
                 timestamp: new Date(),
