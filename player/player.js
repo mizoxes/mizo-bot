@@ -72,7 +72,8 @@ let player = {
 
     playFirstSongInQueue() {
         if (!this.songQueue[0]) {
-            this.playing = false;
+            this.leave();
+            //this.playing = false;
             return;
         }
 
