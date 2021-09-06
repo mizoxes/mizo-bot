@@ -14,9 +14,15 @@ module.exports = {
     expiresIn: 0,
     lastRequest: 0,
 
-    async getPlaylistFromSpotify(playlistId) {
+    async getPlaylistFromSpotify(link) {
         if (!this._updateToken()) {
             console.log(`failed to update token`);
+            return;
+        }
+
+        const playlistId = this._getPlaylistId(link);
+        if (!playlistId) {
+            console.log("invalid spotify playlist link");
             return;
         }
 
@@ -39,6 +45,19 @@ module.exports = {
             songs.push(items[i].track.name);
         }
         return songs;
+    },
+
+    _getPlaylistId(link) {
+        const str = "open.spotify.com/playlists/";
+        const idx = link.indexOf(str);
+        if (idx === -1) {
+            return '';
+        }
+        let playlistId = '';
+        for (let i = idx + str.length; link[i] !== '?' && i < link.length; i++) {
+            playlistId += link[i];
+        }
+        return playlistId;
     },
 
     _updateToken() {
