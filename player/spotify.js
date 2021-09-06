@@ -6,10 +6,11 @@
  * 
  */
 
+const fs                = require("fs");
 const XMLHttpRequest    = require("xmlhttprequest").XMLHttpRequest;
 const config            = require("../config.json");
 
-module.exports = {
+const spotify = {
     authToken: '',
     expiresIn: 0,
     lastRequest: 0,
@@ -48,7 +49,7 @@ module.exports = {
     },
 
     _getPlaylistId(link) {
-        const str = "open.spotify.com/playlists/";
+        const str = "open.spotify.com/playlist/";
         const idx = link.indexOf(str);
         if (idx === -1) {
             return '';
@@ -65,6 +66,7 @@ module.exports = {
         const elapsedTime = currentTime - this.lastRequest;
         if (elapsedTime > this.expiresIn) {
             this._requestNewToken();
+            this._saveToken();
         }
         return this.authToken;
     },
@@ -85,5 +87,29 @@ module.exports = {
             this.expiresIn = result["expires_in"];
             this.lastRequest = new Date().getTime() / 1000;
         }
+    },
+
+    _saveToken() {
+        fs.writeFile("./token.json", JSON.stringify({
+            authToken: this.authToken,
+            expiresIn: this.expiresIn,
+            lastRequest: this.lastRequest
+        }), error => console.log("failed to save token: " + error));
+    },
+
+    _loadToken() {
+        if (!fs.existsSync("./token.json")) {
+            return;
+        }
+
+        const string = fs.readFileSync("./token.json");
+        const data          = JSON.parse(string);
+        this.authToken      = data.authToken;
+        this.expiresIn      = data.expiresIn;
+        this.lastRequest    = data.lastRequest;
     }
 };
+
+spotify._loadToken();
+
+module.exports = spotify;
