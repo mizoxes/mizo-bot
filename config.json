@@ -1,4 +1,6 @@
 {
     "prefix": "#",
-    "token": "token"
+    "token": "token",
+    "spotify-id": "id",
+    "spotify-secret": "secret"
 }
