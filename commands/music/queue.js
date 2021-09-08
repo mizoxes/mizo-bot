@@ -12,6 +12,8 @@ module.exports = {
         for (const song of queue) {
             str += song.title + '\n';
         }
+        if (!str)
+            str = 'none';
 
         message.channel.send({
             embeds: [{

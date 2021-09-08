@@ -24,7 +24,9 @@ module.exports = {
             song: args.join(' '),
             textChannel: message.channel,
             voiceChannel: voiceChannel
-        }).then((title, url) => {
+        });
+        
+        /*.then((title, url) => {
             message.channel.send({
                 embeds: [{
                     color: 3447003,
@@ -38,6 +40,6 @@ module.exports = {
                 }]
             });
         }
-        );
+        );*/
     }
 };

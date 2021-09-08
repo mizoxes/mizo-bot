@@ -9,6 +9,7 @@
 const ytdl = require("ytdl-core");
 const ytSearch = require("yt-search");
 const DiscordVoice = require("@discordjs/voice");
+const spotify = require("./spotify");
 
 let player = {
     audioPlayer: new DiscordVoice.createAudioPlayer({
@@ -41,12 +42,18 @@ let player = {
     },
 
     async play(info) {
-        const song = await this.getSongFromYoutube(info.song);
-        if (!song) {
-            info.textChannel.send("can't find that song on youtube");
-            return;
+        let songs;
+        
+        if (info.song.includes("open.spotify.com/playlist/")) {
+            const playlist = await spotify.getPlaylistFromSpotify(info.song);
+            playlist.forEach(track => {
+                songs.push({title: track, url: ''});
+            });
         }
-
+        else {
+            songs = [{title: info.song, url: ''}];
+        }
+        
         if (!this.playing) {
             this.textChannel = info.textChannel;
             this.voiceChannel = info.voiceChannel;
@@ -55,7 +62,7 @@ let player = {
                 guildId: info.voiceChannel.guild.id,
                 adapterCreator: info.voiceChannel.guild.voiceAdapterCreator
             });
-            this.songQueue = [song];
+            this.songQueue = songs;
 
             this.voiceConnection.subscribe(this.audioPlayer);
 
@@ -63,22 +70,27 @@ let player = {
             this.playFirstSongInQueue();
         }
         else {
-            this.songQueue.push(song);
-            this.textChannel.send(`${song.title} has been added to the queue`);
+            songs.forEach(song => this.songQueue.push(song));
+            //this.textChannel.send(`${songs[0].title} has been added to the queue`);
         }
-
-        return song;
     },
 
-    playFirstSongInQueue() {
+    async playFirstSongInQueue() {
         if (!this.songQueue[0]) {
             this.leave();
-            //this.playing = false;
             return;
         }
 
+        if (!this.songQueue[0].url) {
+            this.songQueue[0] = await this.getSongFromYoutube(this.songQueue[0].title);
+            if (!this.songQueue[0]) {
+                info.textChannel.send("can't find that song on youtube");
+                return;
+            }
+        }
+
         this.audioPlayer.play(DiscordVoice.createAudioResource(ytdl(this.songQueue[0].url), {
-            //inputType: "opus",
+            //inputType: DiscordVoice.StreamType.OggOpus,
             inlineVolume: false
         }));
 
@@ -109,6 +121,7 @@ let player = {
     leave() {
         if (this.playing) {
             this.playing = false;
+            this.audioPlayer.stop(true);
             this.voiceConnection.destroy();
         }
     },
@@ -123,9 +136,9 @@ let player = {
 };
 
 player.audioPlayer.on(DiscordVoice.AudioPlayerStatus.Idle, () => {
+    console.log("idle");
     player.songQueue.shift();
     player.playFirstSongInQueue();
-    console.log("idle");
 });
 
 module.exports = player;
